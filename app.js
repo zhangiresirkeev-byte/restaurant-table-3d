@@ -77,7 +77,7 @@ function setDrawers(value){if(opened===value)return;opened=value;const b=documen
 document.querySelector('#drawers').addEventListener('click',()=>setDrawers(!opened));
 document.querySelector('#screen').addEventListener('click',()=>device?.next());
 document.querySelector('#tour').addEventListener('click',()=>tour?.begin());
-document.querySelector('#detail').addEventListener('click',()=>{if(detail){resetCamera();return}detail=true;const b=document.querySelector('#detail');b.setAttribute('aria-pressed','true');b.textContent='Вернуться к столу';controls.target.set(0,.835,0);camera.position.set(.56,1.19,.74);controls.update();invalidate(30)});
+document.querySelector('#detail').addEventListener('click',()=>{if(detail){resetCamera();return}detail=true;const b=document.querySelector('#detail');b.setAttribute('aria-pressed','true');b.textContent='Вернуться к столу';controls.target.set(0,.89,0);camera.position.set(.7,1.3,.94);controls.update();invalidate(30)});
 document.querySelector('#reset').addEventListener('click',resetCamera);
 document.querySelector('#fullscreen').addEventListener('click',async()=>{try{if(document.fullscreenElement)await document.exitFullscreen();else await stage.requestFullscreen()}catch{status.textContent='Для полного экрана используйте кнопку браузера.'}});
 function resize(){const {width,height}=stage.getBoundingClientRect();renderer.setSize(width,height,false);camera.aspect=width/height;camera.fov=THREE.MathUtils.radToDeg(2*Math.atan(Math.tan(THREE.MathUtils.degToRad(10))*Math.max(1,1.7778/camera.aspect)));camera.updateProjectionMatrix();composer.setSize(width,height);invalidate(30)}new ResizeObserver(resize).observe(stage);resize();

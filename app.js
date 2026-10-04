@@ -8,10 +8,10 @@ import {EffectComposer} from './EffectComposer.js';
 import {SSAOPass} from './SSAOPass.js';
 import {OutputPass} from './OutputPass.js';
 import {RenderPass} from './RenderPass.js';
-import {createBeHere,createTour} from './behere.js';
+import {createBeHere,createTour} from './behere.js?v=a8c21f5aa498';
 
 const stage=document.querySelector('#stage'),canvas=document.querySelector('#view'),status=document.querySelector('#status'),progress=document.querySelector('#progress');
-let frames=10,product,room,poses=[],opened=false,detail=false,transition=null,device,tour;
+let frames=10,product,room,poses=[],opened=false,detail=false,transition=null,device,tour,lastTourAmount=null;
 const renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:false,powerPreference:'high-performance'});
 renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.AgXToneMapping;renderer.toneMappingExposure=.88;
 renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.VSMShadowMap;renderer.shadowMap.autoUpdate=false;
@@ -73,10 +73,10 @@ if(!poses.length)throw new Error('Не найдены положения отк�
 tour=createTour(camera,controls,stage,setDrawers,i=>device.setPage(i),invalidate,status);
 document.querySelectorAll('nav button').forEach(b=>b.disabled=false);document.querySelector('#loading').classList.add('done');status.textContent='Вращайте стол. Нажмите на экран BeHere, чтобы пройти три шага.';document.documentElement.dataset.ready='true';renderer.shadowMap.needsUpdate=true;invalidate(50)}
 loadScene().catch(error=>{console.error(error);progress.textContent='Не удалось загрузить сцену. Обновите страницу.';status.textContent='Ошибка загрузки 3D-сцены.';document.documentElement.dataset.ready='error'});
-function setDrawers(value){if(opened===value)return;opened=value;const b=document.querySelector('#drawers');b.setAttribute('aria-pressed',String(opened));b.textContent=opened?'Закрыть ящики':'Открыть ящики';transition={start:performance.now(),from:poses.map(p=>({p:p.obj.position.clone(),q:p.obj.quaternion.clone(),s:p.obj.scale.clone()})),to:opened?'b':'a'};status.textContent=opened?'Четыре боковых ящика для телефонов.':'Ящики закрыты.';invalidate(50)}
+function setDrawers(value,progress=null){if(progress!==null){transition=null;const amount=value?progress:1-progress;if(lastTourAmount===amount)return;lastTourAmount=amount;for(const p of poses){p.obj.position.lerpVectors(p.a.p,p.b.p,amount);p.obj.quaternion.slerpQuaternions(p.a.q,p.b.q,amount);p.obj.scale.lerpVectors(p.a.s,p.b.s,amount)}if(opened!==value){opened=value;const b=document.querySelector('#drawers');b.setAttribute('aria-pressed',String(opened));b.textContent=opened?'Закрыть ящики':'Открыть ящики'}renderer.shadowMap.needsUpdate=true;invalidate();return}lastTourAmount=null;if(opened===value)return;opened=value;const b=document.querySelector('#drawers');b.setAttribute('aria-pressed',String(opened));b.textContent=opened?'Закрыть ящики':'Открыть ящики';transition={start:performance.now(),from:poses.map(p=>({p:p.obj.position.clone(),q:p.obj.quaternion.clone(),s:p.obj.scale.clone()})),to:opened?'b':'a'};status.textContent=opened?'Четыре боковых ящика для телефонов.':'Ящики закрыты.';invalidate(50)}
 document.querySelector('#drawers').addEventListener('click',()=>setDrawers(!opened));
 document.querySelector('#screen').addEventListener('click',()=>device?.next());
-document.querySelector('#tour').addEventListener('click',()=>tour?.begin());
+document.querySelector('#tour').addEventListener('click',()=>{device?.prepareShowcase();tour?.begin()});
 document.querySelector('#detail').addEventListener('click',()=>{if(detail){resetCamera();return}detail=true;const b=document.querySelector('#detail');b.setAttribute('aria-pressed','true');b.textContent='Вернуться к столу';controls.target.set(0,.89,0);camera.position.set(.7,1.3,.94);controls.update();invalidate(30)});
 document.querySelector('#reset').addEventListener('click',resetCamera);
 document.querySelector('#fullscreen').addEventListener('click',async()=>{try{if(document.fullscreenElement)await document.exitFullscreen();else await stage.requestFullscreen()}catch{status.textContent='Для полного экрана используйте кнопку браузера.'}});

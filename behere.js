@@ -1,5 +1,6 @@
 import * as THREE from './three.module.js';
 import {RoundedBoxGeometry} from './RoundedBoxGeometry.js';
+import {sampleTour} from './tour-path.js?v=a8c21f5aa498';
 
 export function createBeHere(product, scene, invalidate, canvas, camera, controls) {
   const oldScreen=product.getObjectByName('Screen_360_axis');
@@ -27,7 +28,7 @@ export function createBeHere(product, scene, invalidate, canvas, camera, control
   const bounce=new THREE.PointLight(0xffd59a,.012,.38,2);bounce.position.set(0,.88,.065);root.add(bounce);
   let page=0,language='RU',mode='Friends';
   const goldInk='#d4b681',paper='#f4ead4';
-  const labels={RU:['Добро пожаловать','Хорошая еда. Больше живого общения.','Начать','Друзья','Пара','Семья','Случайно','Выберите настроение вечера'],KZ:['Қош келдіңіз','Дәмді ас. Шынайы әңгіме.','Бастау','Достар','Жұп','Отбасы','Кездейсоқ','Кештің көңіл күйін таңдаңыз'],EN:['Welcome','Good food. Deeper connections.','Start','Friends','Couple','Family','Random','Pick your vibe for today']};
+  const labels={RU:['Добро пожаловать','Хорошая еда. Больше живого общения.','Начать','Друзья','Пара','Семья','Случайно','Выберите настроение вечера'],KZ:['Қош келдіңіз','Дәмді ас. Шынайы әңгіме.','Бастау','Достар','Жұп','Отбасы','Кездейсоқ','Кештің көңіл күйін таңдаңыз'],EN:['Welcome','Good food. Deeper connections.','Start','Friends','Couple','Family','Random','Select Mode']};
   function text(value,x,y,size,color=paper,font='Georgia',align='center'){ctx.fillStyle=color;ctx.font=`${size}px ${font}`;ctx.textAlign=align;ctx.fillText(value,x,y)}
   function rounded(x,y,w,h,r,fill,stroke){ctx.beginPath();ctx.roundRect(x,y,w,h,r);if(fill){ctx.fillStyle=fill;ctx.fill()}if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=4;ctx.stroke()}}
   function render(){const l=labels[language];ctx.fillStyle='#080a0a';ctx.fillRect(0,0,2096,2096);
@@ -38,8 +39,8 @@ export function createBeHere(product, scene, invalidate, canvas, camera, control
       const g=ctx.createLinearGradient(0,1510,0,1720);g.addColorStop(0,'#ead5ad');g.addColorStop(1,'#ab834c');rounded(415,1550,1266,210,100,g);text(l[2]+'  →',1048,1687,66,'#161710','Arial');
     }else if(page===1){text('BeHere',1048,300,105,goldInk);text(l[7],1048,435,53,paper,'Arial');
       [['♧',l[3]],['♡',l[4]],['♧',l[5]],['◇',l[6]]].forEach(([icon,label],i)=>{const x=165+(i%2)*900,y=630+Math.floor(i/2)*620;rounded(x,y,866,570,55,'#161713','#786745');text(icon,x+433,y+220,175,goldInk);text(label,x+433,y+390,79)});
-    }else{ text('←',170,220,70,goldInk);text('BeHere',1048,240,88,goldInk);text('4 / 4',1840,240,55,goldInk,'Arial');text(mode.toUpperCase(),1048,700,50,goldInk,'Arial');
-      const lines=language==='RU'?['Какой момент в жизни','изменил вас больше всего?']:language==='KZ'?['Өміріңіздегі қай сәт','сізді қатты өзгертті?']:['What is a moment in your life','that completely changed you?'];lines.forEach((v,i)=>text(v,1048,995+i*165,86));rounded(195,1710,1706,18,9,'#38352c');rounded(195,1710,680,18,9,goldInk);text(language==='RU'?'Дальше  →':language==='KZ'?'Келесі  →':'Next  →',1048,1900,58,goldInk,'Arial');}
+    }else{ text('←',170,220,70,goldInk);text('03/20',1048,220,43,goldInk,'Arial');text('BeHere',1048,415,88,goldInk);text('4 / 4',1840,240,55,goldInk,'Arial');text(mode.toUpperCase(),1048,700,50,goldInk,'Arial');
+      const lines=language==='RU'?['Какой момент в жизни','изменил вас больше всего?']:language==='KZ'?['Өміріңіздегі қай сәт','сізді қатты өзгертті?']:['What is a moment in your life','that completely changed you?'];lines.forEach((v,i)=>text(v,1048,995+i*165,86));rounded(195,1710,1706,18,9,'#38352c');rounded(195,1710,256,18,9,goldInk);text(language==='RU'?'Дальше  →':language==='KZ'?'Келесі  →':'Next  →',1048,1900,58,goldInk,'Arial');}
     texture.needsUpdate=true;invalidate(6);
   }
   function next(){page=(page+1)%3;render()}
@@ -50,24 +51,19 @@ export function createBeHere(product, scene, invalidate, canvas, camera, control
     else if(page===1){const i=(y>1250?2:0)+(x>1048?1:0);mode=['Friends','Couple','Family','Random'][i];page=2;}
     else if(page===2&&y<400){page=1}else{page=(page+1)%3}render();
   });
-  render();return{next,setPage(i){if(page===i)return;page=i;render()}};
+  render();return{next,prepareShowcase(){language='EN';mode='Friends';page=0;render()},setPage(i){if(page===i)return;page=i;render()}};
 }
 
 export function createTour(camera,controls,stage,setDrawers,setPage,invalidate,status){
   let active=false,start=0,wasFullscreen=false,saved;
-  const ease=t=>t*t*(3-2*t),angle=Math.atan2(2.9,3.9),wide=new THREE.Vector3(2.9,2.6,3.9),near=new THREE.Vector3(.57,1.19,.76),targetWide=new THREE.Vector3(0,.4,0),targetNear=new THREE.Vector3(0,.88,0);
-  function finish(){if(!active)return;active=false;document.body.classList.remove('cinema');controls.enabled=true;setDrawers(false);camera.position.copy(saved.camera);controls.target.copy(saved.target);controls.update();invalidate(35);if(wasFullscreen&&document.fullscreenElement)document.exitFullscreen().catch(()=>{});status.textContent='Показ завершён. Можно запустить ещё раз.';document.querySelector('#tour').focus()}
-  async function begin(){if(active)return;saved={camera:camera.position.clone(),target:controls.target.clone()};setDrawers(false);setPage(0);controls.enabled=false;document.body.classList.add('cinema');
+  function finish(completed=false){if(!active)return;active=false;document.body.classList.remove('cinema');controls.enabled=true;setDrawers(false,1);if(completed){const pose=sampleTour(30);camera.position.fromArray(pose.camera);controls.target.fromArray(pose.target)}else{camera.position.copy(saved.camera);controls.target.copy(saved.target)}controls.update();invalidate(35);if(wasFullscreen&&document.fullscreenElement)document.exitFullscreen().catch(()=>{});status.textContent='Показ завершён. Можно запустить ещё раз.';document.querySelector('#tour').focus()}
+  async function begin(){if(active)return;saved={camera:camera.position.clone(),target:controls.target.clone()};setDrawers(false,1);setPage(0);controls.enabled=false;document.body.classList.add('cinema');
     wasFullscreen=false;if(!document.fullscreenElement){try{await stage.requestFullscreen();wasFullscreen=true}catch{}}
     active=true;start=performance.now();invalidate(40);
   }
   document.addEventListener('keydown',e=>{if(e.key==='Escape')finish()});document.addEventListener('fullscreenchange',()=>{if(active&&wasFullscreen&&!document.fullscreenElement)finish()});
-  function update(time){if(!active)return false;const s=(time-start)/1000;if(s>=30){finish();return false}
-    if(s<4){const f=ease(s/4);camera.position.copy(wide).multiplyScalar(1.04-.04*f);controls.target.copy(targetWide)}
-    else if(s<18){const a=angle+Math.PI*2*ease((s-4)/14);camera.position.set(Math.sin(a)*4.86,2.6,Math.cos(a)*4.86);controls.target.copy(targetWide)}
-    else if(s<21){const f=ease((s-18)/3);camera.position.lerpVectors(wide,near,f);controls.target.lerpVectors(targetWide,targetNear,f);setPage(1)}
-    else if(s<26){const f=ease((s-21)/5),a=Math.atan2(near.x,near.z)+Math.PI*2*f;camera.position.set(Math.sin(a)*.95,1.19,Math.cos(a)*.95);controls.target.copy(targetNear);setDrawers(true);setPage(s<23?1:2)}
-    else{const f=ease((s-26)/4);camera.position.lerpVectors(near,wide,f);controls.target.lerpVectors(targetNear,targetWide,f);setDrawers(false);setPage(2)}
+  function update(time){if(!active)return false;const pose=sampleTour((time-start)/1000);if(pose.complete){finish(true);return false}
+    camera.position.fromArray(pose.camera);controls.target.fromArray(pose.target);setPage(pose.page);setDrawers(pose.drawerOpen>0,pose.drawerOpen>0?pose.drawerOpen:1);
     camera.lookAt(controls.target);invalidate();return true;
   }
   return{begin,update,get active(){return active}};
